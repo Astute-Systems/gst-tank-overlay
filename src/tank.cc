@@ -3,6 +3,8 @@
 
 #include <cairo.h>
 #include <cairo-gobject.h>
+#include <time.h>
+#include <stdio.h>
 
 #include <glib.h>
 
@@ -66,8 +68,11 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
     guint64 duration, gpointer user_data)
 {
   CairoOverlayState *s = (CairoOverlayState *) user_data;
-  double scale;
+  double scale = 1;
   int width, height;
+  
+  time_t T= time(NULL);
+  struct  tm tm = *localtime(&T);
 
   if (!s->valid)
     return;
@@ -75,19 +80,65 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
   width = GST_VIDEO_INFO_WIDTH (&s->vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&s->vinfo);
 
-  scale = 2 * (((timestamp / (int) 1e7) % 70) + 30) / 100.0;
+  // draw red lines out from the center of the window
+//  scale = 2 * (((timestamp / (int) 1e7) % 70) + 30) / 100.0;
   cairo_translate (cr, width / 2, (height / 2) - 30);
-
-  /* FIXME: this assumes a pixel-aspect-ratio of 1/1 */
   cairo_scale (cr, scale, scale);
+  cairo_set_line_width(cr, 2);
+  cairo_set_source_rgb(cr, 0.0, 0.8, 0.0);
 
-  cairo_move_to (cr, 0, 0);
-  cairo_curve_to (cr, 0, -30, -50, -30, -50, 0);
-  cairo_curve_to (cr, -50, 30, 0, 35, 0, 60);
-  cairo_curve_to (cr, 0, 35, 50, 30, 50, 0);
-  cairo_curve_to (cr, 50, -30, 0, -30, 0, 0);
-  cairo_set_source_rgba (cr, 0.9, 0.0, 0.1, 0.7);
-  cairo_fill (cr);
+  // square
+  cairo_rectangle(cr, -10, -10, +20, +20);
+  cairo_rectangle(cr, 0, 0, 1, 1);
+
+  // Cross hair
+  // Virtical above
+  cairo_move_to(cr, 0, -10);
+  cairo_line_to(cr, 0, -15);
+  cairo_move_to(cr, 0, -25);
+  cairo_line_to(cr, 0, -35);
+  // Horizontal right
+  cairo_move_to(cr, -10, 0);
+  cairo_line_to(cr, -30, 0);
+  cairo_move_to(cr, -30, -10);
+  cairo_line_to(cr, -50, -10);
+  cairo_move_to(cr, -30, +10);
+  cairo_line_to(cr, -50, +10);
+  cairo_move_to(cr, -70, 0);
+  cairo_line_to(cr, -90, 0);
+  // Virtical below
+  cairo_move_to(cr, 0, +10);
+  cairo_line_to(cr, 0, +15);
+  cairo_move_to(cr, 0, +25);
+  cairo_line_to(cr, 0, +35);
+  // Horizontal left
+  cairo_move_to(cr, +10, 0);
+  cairo_line_to(cr, +30, 0);
+  cairo_move_to(cr, +30, +10);
+  cairo_line_to(cr, +50, +10);
+  cairo_move_to(cr, +30, -10);
+  cairo_line_to(cr, +50, -10);
+  cairo_move_to(cr, +70, 0);
+  cairo_line_to(cr, +90, 0);
+
+  cairo_stroke(cr);
+  
+  cairo_select_font_face(cr, "Ubuntu Thin",
+  CAIRO_FONT_SLANT_NORMAL,
+  CAIRO_FONT_WEIGHT_BOLD);
+
+  cairo_set_font_size(cr, 24);
+
+  cairo_move_to(cr, 190, 250);
+  cairo_show_text(cr, "0025.4m");  
+  
+  char tstring[200];
+  snprintf(tstring, 200, "Time %02d:%02d:%02d",tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+  cairo_set_font_size(cr, 14);
+  cairo_move_to(cr, -300, -180);
+  cairo_show_text(cr, tstring);  
+
 }
 
 static GstElement *
