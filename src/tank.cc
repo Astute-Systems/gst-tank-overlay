@@ -67,6 +67,9 @@ static void
 draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
     guint64 duration, gpointer user_data)
 {
+  char* labels[] = { "270", "215", " 0 ", " 45" };
+  char* current_label = 0;
+  int label_count = 0;
   CairoOverlayState *s = (CairoOverlayState *) user_data;
   double scale = 1;
   int width, height;
@@ -91,6 +94,26 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
   cairo_rectangle(cr, -10, -10, +20, +20);
   cairo_rectangle(cr, 0, 0, 1, 1);
 
+  // Degrees
+  int l=0;
+  for (int i=0; i<40; i++) {
+    int ii = i-4;
+    int offset=0;
+    if (!(ii % 10)) {
+      offset =3;
+      current_label = labels[label_count++];
+      cairo_set_font_size(cr, 14);
+      cairo_move_to(cr, -200 + (i*10) - 10, -160);
+      cairo_show_text(cr, current_label);  
+    }
+    cairo_move_to(cr, -200 + (i*10), -190);
+    cairo_line_to(cr, -200 + (i*10), -185 + offset);
+  }
+  // Degrees Centre
+  cairo_move_to(cr, -5, -200);
+  cairo_line_to(cr, 0, -195);
+  cairo_line_to(cr, 5, -200);
+  
   // Cross hair
   // Virtical above
   cairo_move_to(cr, 0, -10);
@@ -123,22 +146,39 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
 
   cairo_stroke(cr);
   
-  cairo_set_source_rgb(cr, 0.0, 0.8, 0.0);
+//  cairo_set_source_rgb(cr, 0.0, 0.8, 0.0);
   cairo_select_font_face(cr, "Ubuntu Thin",
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD);
 
   cairo_set_font_size(cr, 24);
 
-  cairo_move_to(cr, 190, 250);
-  cairo_show_text(cr, "0025.4m");  
+  cairo_move_to(cr, -20, 250);
+  cairo_show_text(cr, "0025");  
   
   char tstring[200];
-  snprintf(tstring, 200, "Time %02d:%02d:%02d",tm.tm_hour, tm.tm_min, tm.tm_sec);
+  snprintf(tstring, 200, "%02d:%02d:%02d",tm.tm_hour, tm.tm_min, tm.tm_sec);
 
   cairo_set_font_size(cr, 14);
   cairo_move_to(cr, -300, -180);
   cairo_show_text(cr, tstring);  
+  
+  // Telemetry left
+  cairo_move_to(cr, -300, -120);
+  cairo_show_text(cr, "15°");  
+  cairo_move_to(cr, -300, -40);
+  cairo_show_text(cr, "WPN - READY");  
+  cairo_move_to(cr, -300, -20);
+  cairo_show_text(cr, "SPIKE");  
+
+  // Telemetry right
+  cairo_move_to(cr, 270, -120);
+  cairo_show_text(cr, "5 KPH");  
+  cairo_move_to(cr, 270, -40);
+  cairo_show_text(cr, "1X");
+  cairo_move_to(cr, 270, -20);
+  cairo_set_source_rgb(cr, 0.6, 0.6, 0.6);
+  cairo_show_text(cr, "IR");
 
 }
 
