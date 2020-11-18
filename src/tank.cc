@@ -93,14 +93,20 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
 static GstElement *
 setup_gst_pipeline (CairoOverlayState * overlay_state)
 {
+  int width = 640;
+  int height = 480;
+  int framerate = 30;
+
   GstElement *pipeline;
   GstElement *cairo_overlay;
-  GstElement *source, *adaptor1, *adaptor2, *sink;
+  GstElement *source, *capabilities, *adaptor1, *adaptor2, *sink;
+  GstCaps *caps, *caps_camera;
 
   pipeline = gst_pipeline_new ("cairo-overlay-example");
 
   /* Adaptors needed because cairooverlay only supports ARGB data */
   source = gst_element_factory_make ("v4l2src", "source");
+  capabilities = gst_element_factory_make("capsfilter", NULL);
   adaptor1 = gst_element_factory_make ("videoconvert", "adaptor1");
   cairo_overlay = gst_element_factory_make ("cairooverlay", "overlay");
   adaptor2 = gst_element_factory_make ("videoconvert", "adaptor2");
@@ -111,16 +117,21 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
   /* If failing, the element could not be created */
   g_assert (cairo_overlay);
 
+  caps_camera = gst_caps_new_simple("video/x-raw", "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+                                      "framerate", GST_TYPE_FRACTION, framerate, 1, NULL);
+
+  g_object_set(capabilities, "caps", caps_camera, NULL);
+
+
   /* Hook up the necessary signals for cairooverlay */
   g_signal_connect (cairo_overlay, "draw",
       G_CALLBACK (draw_overlay), overlay_state);
   g_signal_connect (cairo_overlay, "caps-changed",
       G_CALLBACK (prepare_overlay), overlay_state);
 
-  gst_bin_add_many (GST_BIN (pipeline), source, adaptor1,
-      cairo_overlay, adaptor2, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), source, capabilities, adaptor1, cairo_overlay, adaptor2, sink, NULL);
 
-  if (!gst_element_link_many (source, adaptor1,
+  if (!gst_element_link_many (source, capabilities, adaptor1,
           cairo_overlay, adaptor2, sink, NULL)) {
     g_warning ("Failed to link elements!");
   }
