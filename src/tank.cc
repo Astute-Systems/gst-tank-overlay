@@ -84,8 +84,8 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
 //  scale = 2 * (((timestamp / (int) 1e7) % 70) + 30) / 100.0;
   cairo_translate (cr, width / 2, (height / 2) - 30);
   cairo_scale (cr, scale, scale);
-  cairo_set_line_width(cr, 2);
-  cairo_set_source_rgb(cr, 0.0, 0.8, 0.0);
+  cairo_set_line_width(cr, 1);
+  cairo_set_source_rgb(cr, 1, 1, 1);
 
   // square
   cairo_rectangle(cr, -10, -10, +20, +20);
@@ -123,6 +123,7 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
 
   cairo_stroke(cr);
   
+  cairo_set_source_rgb(cr, 0.0, 0.8, 0.0);
   cairo_select_font_face(cr, "Ubuntu Thin",
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD);
